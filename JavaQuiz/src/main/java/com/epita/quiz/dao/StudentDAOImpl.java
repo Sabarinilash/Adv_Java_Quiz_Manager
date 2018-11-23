@@ -1,0 +1,74 @@
+package com.epita.quiz.dao;
+
+
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.epita.quiz.model.Students;
+/**
+ * This class is for validating and saving the student details 
+ * @author Nilash
+ *
+ */
+@Repository
+public class StudentDAOImpl implements StudentDAO{
+	
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+/**
+ * This method is for saving the student details
+ */
+	@Override
+	public void savestudent(Students student) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		if(student!=null) {
+			try {
+				
+				session.save(student);
+				tx.commit();
+				session.close();
+			} catch (Exception e) {
+				tx.rollback();
+				session.close();
+				e.printStackTrace();
+			}
+		}
+		
+	}
+/**
+ * This method is for validating the student credentials
+ */
+	@Override
+	public Students loginStudent(Students student) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		String hql = "from Students as s where s.email= ? and s.password= ? ";
+		try {
+			Query query = session.createQuery(hql);
+			query.setParameter(0, student.getEmail());
+			query.setParameter(1, student.getPassword() );
+			student = (Students)query.uniqueResult();
+			tx.commit();
+			session.close();
+		}
+		catch (Exception e) {
+			tx.rollback();
+			session.close();
+			e.printStackTrace();
+			return null;
+			
+		}
+		return student;
+	}
+
+}
